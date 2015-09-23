@@ -44,8 +44,8 @@ public class LockRunListener extends RunListener<AbstractBuild<?, ?>> {
 	public void onStarted(AbstractBuild<?, ?> build, TaskListener listener) {
 		AbstractProject<?, ?> proj = Utils.getProject(build);
 		LockedResourcesBuildAction requiredResourcesAction = build.getAction(LockedResourcesBuildAction.class);
-		if ( proj != null && requiredResourcesAction != null && !requiredResourcesAction.matchedResources.isEmpty() ) {
-			List<String> required = requiredResourcesAction.matchedResources;
+		if ( proj != null && requiredResourcesAction != null && !requiredResourcesAction.getMatchedResources().isEmpty() ) {
+			List<String> required = requiredResourcesAction.getMatchedResources();
 			if (LockableResourcesManager.get().lock(required, build)) {
 				requiredResourcesAction.populateLockedResources(build);
 				listener.getLogger().printf("%s acquired lock on %s", LOG_PREFIX, required);

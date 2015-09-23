@@ -20,6 +20,8 @@ import org.jenkins.plugins.lockableresources.LockableResourcesManager;
 import org.jenkins.plugins.lockableresources.RequiredResourcesParameterValue;
 import org.jenkins.plugins.lockableresources.RequiredResourcesProperty;
 
+// TODO: re-creating this struct for every canRun analysis is wasteful and inefficient
+//       the result should be cached instead
 public class LockableResourcesStruct {
 
 	public final Set<LockableResource> required;

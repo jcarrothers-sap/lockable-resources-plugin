@@ -12,6 +12,7 @@ package org.jenkins.plugins.lockableresources.actions;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,10 +24,23 @@ public class LockedResourcesBuildAction implements Action {
 
 	private final List<ResourcePOJO> lockedResources = new ArrayList<ResourcePOJO>();
 
-	public final transient List<String> matchedResources = new ArrayList<String>();
+	private transient List<String> matchedResources;
+
+	public LockedResourcesBuildAction() {
+		matchedResources = new ArrayList<String>();
+	}
+	// for object deserialization
+	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		stream.defaultReadObject();
+		matchedResources = new ArrayList<String>(); // matchedResources are not preserved through Jenkins restarts
+	}
 
 	public List<ResourcePOJO> getLockedResources() {
 		return lockedResources;
+	}
+
+	public List<String> getMatchedResources() {
+		return matchedResources;
 	}
 
 	public String getIconFileName() {

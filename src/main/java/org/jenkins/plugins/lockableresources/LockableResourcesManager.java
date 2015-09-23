@@ -178,7 +178,7 @@ public class LockableResourcesManager extends Plugin {
 		}
 
 		// check for any already queue resources
-		checkCurrentResourcesStatus(selected, action.matchedResources, queueItem.id);
+		checkCurrentResourcesStatus(selected, action.getMatchedResources(), queueItem.id);
 
 		ArrayList<LockableResource> candidates = new ArrayList<LockableResource>(requiredResources.required);
 		LOGGER.log(Level.FINEST, "Candidates: {0}", candidates);
@@ -290,10 +290,10 @@ public class LockableResourcesManager extends Plugin {
 		}
 
 		LOGGER.log(Level.FINER, "Queuing locks for selected resources: {0}", selected);
-		action.matchedResources.clear();
+		action.getMatchedResources().clear();
 		for (LockableResource rsc : selected) {
 			rsc.setQueued(queueItem.id, queueItemProject);
-			action.matchedResources.add(rsc.getName());
+			action.getMatchedResources().add(rsc.getName());
 		}
 		return selected;
 	}
