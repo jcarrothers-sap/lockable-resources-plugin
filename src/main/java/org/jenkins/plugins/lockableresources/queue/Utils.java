@@ -47,7 +47,7 @@ public class Utils {
 		RequiredResourcesProperty property = project
 				.getProperty(RequiredResourcesProperty.class);
 		if (property != null) {
-			return new LockableResourcesStruct(property);
+			return LockableResourcesStruct.get(property);
 		}
 		return null;
 	}
