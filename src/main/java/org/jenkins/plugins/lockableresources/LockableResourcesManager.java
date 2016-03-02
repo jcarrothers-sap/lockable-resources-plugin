@@ -428,6 +428,20 @@ public class LockableResourcesManager extends Plugin {
 		return result;
 	}
 
+	public synchronized boolean changeLabelAlias( String alias, String newValue ) {
+		if ( alias == null || newValue == null ) return false;
+		if ( alias.trim().isEmpty() || newValue.trim().isEmpty() ) return false;
+		boolean rebuildCaches = false;
+
+		if ( labelAliases.containsKey(alias) ) {
+			String previousValue = labelAliases.put(alias, newValue);
+			rebuildCaches = !newValue.equals(previousValue);
+		}
+
+		if ( rebuildCaches ) buildCaches();
+		return rebuildCaches;
+	}
+
 	public static LockableResourcesManager get() {
 		Jenkins jenkins = Jenkins.getInstance();
 		if (jenkins != null) {
