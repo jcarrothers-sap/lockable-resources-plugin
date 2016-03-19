@@ -438,7 +438,7 @@ public class LockableResourcesManager extends Plugin {
 			rebuildCaches = !newValue.equals(previousValue);
 		}
 
-		if ( rebuildCaches ) buildCaches();
+		if ( rebuildCaches ) save();
 		return rebuildCaches;
 	}
 
