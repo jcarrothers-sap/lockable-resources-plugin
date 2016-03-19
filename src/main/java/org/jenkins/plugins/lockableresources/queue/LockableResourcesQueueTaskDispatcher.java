@@ -42,7 +42,7 @@ public class LockableResourcesQueueTaskDispatcher extends QueueTaskDispatcher {
 			for ( ParametersAction pa : item.getActions(ParametersAction.class) ) {
 				for ( ParameterValue pv : pa.getParameters() ) {
 					if ( pv instanceof RequiredResourcesParameterValue ) {
-						resources = LockableResourcesStruct.get((RequiredResourcesParameterValue)pv);
+						resources = new LockableResourcesStruct((RequiredResourcesParameterValue)pv);
 						break;
 					}
 				}
