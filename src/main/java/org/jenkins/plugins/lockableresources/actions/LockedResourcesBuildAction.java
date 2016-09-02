@@ -13,6 +13,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.Action;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import static org.jenkins.plugins.lockableresources.Constants.*;
 import org.jenkins.plugins.lockableresources.LockableResource;
 import org.jenkins.plugins.lockableresources.LockableResourcesManager;
 
-public class LockedResourcesBuildAction implements Action {
+public class LockedResourcesBuildAction implements Action, Serializable {
 
 	private final List<ResourcePOJO> lockedResources = new ArrayList<ResourcePOJO>();
 
