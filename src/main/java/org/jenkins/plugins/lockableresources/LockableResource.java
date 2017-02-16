@@ -14,6 +14,8 @@ import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.converters.collections.CollectionConverter;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.mapper.Mapper;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
@@ -23,21 +25,31 @@ import hudson.model.Descriptor;
 import hudson.model.Queue;
 import hudson.model.Queue.Item;
 import hudson.model.Queue.Task;
+import hudson.model.User;
+import hudson.tasks.Mailer.UserProperty;
 import hudson.util.FormValidation;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jenkins.model.Jenkins;
 import static org.jenkins.plugins.lockableresources.Constants.*;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
+@ExportedBean(defaultVisibility = 999)
 public class LockableResource
 		extends AbstractDescribableImpl<LockableResource>
 		implements Comparable<LockableResource> {
 
+	private static final Logger LOGGER = Logger.getLogger(LockableResource.class.getName());
 	public static final int NOT_QUEUED = 0;
 	private static final int QUEUE_TIMEOUT = 60 * 1000;
 
@@ -64,14 +76,17 @@ public class LockableResource
 		this.properties = properties;
 	}
 
+	@Exported
 	public String getName() {
 		return name;
 	}
 
+	@Exported
 	public String getDescription() {
 		return description;
 	}
 
+	@Exported
 	public String getLabels() {
 		if ( labels != null && labels.size() > 0 ) {
 			StringBuilder sb = new StringBuilder();
@@ -102,16 +117,58 @@ public class LockableResource
 		return Collections.unmodifiableSet(labels);
 	}
 
-	public Boolean isValidLabel(String candidate) {
+	public boolean isValidLabel(String candidate) {
+		if ( candidate.startsWith(Constants.GROOVY_LABEL_MARKER) ) {
+			throw new UnsupportedOperationException("Groovy expressions not supported by this method.");
+		}
 		return labels.contains(candidate);
 	}
 
+	public boolean expressionMatches(String expression, Map<String,String> params) {
+		Binding binding = new Binding(params);
+		binding.setVariable("resourceName", name);
+		binding.setVariable("resourceDescription", description);
+		binding.setVariable("resourceLabels", labels);
+		String expressionToEvaluate = expression.replace(Constants.GROOVY_LABEL_MARKER, "");
+		GroovyShell shell = new GroovyShell(binding);
+		try {
+			Object result = shell.evaluate(expressionToEvaluate);
+			if (LOGGER.isLoggable(Level.FINE)) {
+				LOGGER.fine("Checked resource " + name + " for " + expression
+						+ " with " + binding + " -> " + result);
+			}
+			return (Boolean) result;
+		} catch (Exception e) {
+			LOGGER.log(
+					Level.SEVERE,
+					"Cannot get boolean result out of groovy expression '"
+							+ expressionToEvaluate + "' on (" + binding + ")",
+					e);
+			return false;
+		}
+	}
+
+	@Exported
 	public String getReservedBy() {
 		return reservedBy;
 	}
 
+	@Exported
 	public boolean isReserved() {
 		return reservedBy != null;
+	}
+
+	@Exported
+	public String getReservedByEmail() {
+		if (reservedBy != null) {
+			UserProperty email = null;
+			User user = Jenkins.getInstance().getUser(reservedBy);
+			if (user != null)
+				email = user.getProperty(UserProperty.class);
+			if (email != null)
+				return email.getAddress();
+		}
+		return null;
 	}
 	
 	public String getProperties() {
@@ -137,6 +194,7 @@ public class LockableResource
 		queuingStarted = 0;
 	}
 
+	@Exported
 	public boolean isLocked() {
 		return build != null;
 	}
@@ -147,6 +205,14 @@ public class LockableResource
 
 	public AbstractBuild<?, ?> getBuild() {
 		return build;
+	}
+
+	@Exported
+	public String getBuildName() {
+		if (build != null)
+			return build.getFullDisplayName();
+		else
+			return null;
 	}
 
 	public void setBuild(AbstractBuild<?, ?> lockedBy) {
